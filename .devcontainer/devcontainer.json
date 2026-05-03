@@ -1,7 +1,7 @@
 {
   "name": "Dafny Lab",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0 && wget https://github.com/dafny-lang/dafny/releases/latest/download/dafny-linux-x64.zip && unzip dafny-linux-x64.zip -d $HOME && echo 'export PATH=$HOME/dafny:$PATH' >> ~/.bashrc",
+  "postCreateCommand": "wget -q https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip && unzip -q dafny-4.11.0-x64-ubuntu-22.04.zip -d $HOME/dafny && echo 'export PATH=$HOME/dafny/dafny:$PATH' >> ~/.bashrc",
   "customizations": {
     "vscode": {
       "extensions": [
