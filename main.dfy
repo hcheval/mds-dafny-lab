@@ -3,9 +3,8 @@
   ### SETUP & INSTALLATION
   ############################################################
 
-  This lab runs in GitHub Codespaces, no local install needed.
-
-  1. Open the repository link provided by your instructor.
+  This lab runs in GitHub Codespaces, no local install needed (though you can install Dafny locally if you prefer). 
+  1. Go to https://github.com/hcheval/mds-dafny-lab. (you will find the same lab file there).
   2. Click the green "Code" button, then "Codespaces", then "Create codespace".
   3. Wait for the environment to load (this may take a minute).
   4. Open this file in the editor.
@@ -28,11 +27,9 @@
   that the code satisfies the specification for every possible input.
 
   This is different from testing, which only checks the inputs you
-  thought to try. A program can pass all its tests and still be wrong
+  thought to try (or generated automatically). A program can pass all its tests and still be wrong
   if the specification is too weak, or if the specification itself
   does not capture what you intended.
-
-  Getting both the code and the specification right is your job.
 */
 
 
@@ -101,10 +98,6 @@ method Max(x: int, y: int) returns (m: int)
 
 
 /*
-  ############################################################
-  ### WEAK VS STRONG SPECIFICATIONS
-  ############################################################
-
   The method below verifies, but is clearly wrong:
 */
 
@@ -134,9 +127,6 @@ method MaxWeakFixed(x: int, y: int) returns (m: int)
 
 
 /*
-  ############################################################
-  ### WHAT IS CORRECTNESS?
-  ############################################################
 
   Specifications encode assumptions about the real world, and
   choosing what to specify is a design decision.
@@ -168,10 +158,6 @@ method TransferSpec(a: int, b: int, amount: int) returns (a2: int, b2: int)
 
 
 /*
-  ############################################################
-  ### PROOF PREVENTS RUNTIME ERRORS
-  ############################################################
-
   Array accesses in Dafny are checked at verification time. If Dafny
   cannot prove an access is in bounds, it will not compile the program.
 */
@@ -197,10 +183,6 @@ method GetAtUnsafe(arr: array<int>, i: int) returns (x: int)
 
 
 /*
-  ############################################################
-  ### LOOPS AND INVARIANTS
-  ############################################################
-
   Dafny does not verify loops by running them. Instead, it asks
   for a loop invariant: a property that holds before the loop begins,
   is preserved by every iteration, and together with the exit condition
@@ -225,7 +207,7 @@ method Sum(n: int) returns (s: int)
 }
 
 /*
-  EXERCISE 6 (CORE): Add loop invariants to SumFixed
+  EXERCISE 6: Add loop invariants to SumFixed
 
   You need two invariants:
     (a) A range invariant: what are the possible values of i?
@@ -257,9 +239,6 @@ method SumFixed(n: int) returns (s: int)
 
 
 /*
-  ############################################################
-  ### ARRAY MAX
-  ############################################################
 
   Finding the maximum of an array requires reasoning about all
   elements at once. The postcondition below uses a universal
@@ -285,7 +264,6 @@ method MaxArray(arr: array<int>) returns (m: int)
 }
 
 /*
-  EXERCISE 7: Add loop invariants to MaxArrayFixed
 
   You need two invariants:
     (a) A range invariant: what are the valid values of i?
