@@ -3,18 +3,18 @@
   ### SETUP & INSTALLATION
   ############################################################
 
-  To run and verify this file interactively, use the Dafny extension
-  for Visual Studio Code.
+  This lab runs in GitHub Codespaces — no local install needed.
 
-  1. Install Visual Studio Code (VS Code).
-  2. Open the Extensions pane (Ctrl+Shift+X or Cmd+Shift+X).
-  3. Search for "Dafny" (publisher: Dafny) and install it.
-  4. Open this file (`Lab1_Basics.dfy`) in VS Code.
+  1. Open the repository link provided by your instructor.
+  2. Click the green "Code" button, then "Codespaces", then "Create codespace".
+  3. Wait for the environment to load (this may take a minute).
+  4. Open this file in the editor.
+  5. To verify, open a terminal (Ctrl+`) and run:
 
-  The extension will automatically download the necessary verification
-  tools (including the Z3 theorem prover). Verification runs
-  automatically as you type. Look for the status bar at the bottom
-  or inline red squiggles for verification errors.
+       dafny verify Lab1_Basics.dfy
+
+  The Dafny extension will also show inline red squiggles for
+  verification errors as you type, but may take a moment to start.
 */
 
 
@@ -23,37 +23,24 @@
   ### INTRODUCTION
   ############################################################
 
-  Goals of this lab:
-    + learning the basics of Dafny
-    + understanding what specifications are
-    + seeing why testing is not enough
-    + discovering loop invariants
-    + understanding that writing correct programs means
-      writing correct specifications
-
   Dafny is a programming language with built-in verification.
 
-  In Dafny, we write:
-    - code  (what the program does)
-    - specifications (what must be true)
+  In Dafny, you write code and specifications together.
+  The code says what the program does.
+  The specification says what must be true.
 
   Dafny checks that the code satisfies the specification
-  for ALL inputs — not just the ones you test.
+  for ALL inputs, not just the ones you test.
 
-  Key idea:
-    A program can be correct with respect to its specification,
-    and still be wrong if the specification is too weak.
-    Getting both right is your job.
+  A program can be correct with respect to its specification
+  and still be wrong if the specification is too weak.
+  Getting both right is your job.
 */
 
 
 /*
-  ############################################################
-  ### PART 1: BASIC METHODS AND POSTCONDITIONS
-  ############################################################
-
-  `ensures` is a postcondition: a property that must hold
-  when the method returns.
+  An `ensures` clause is a postcondition, a property that must
+  hold when the method returns.
 */
 
 method Double(x: int) returns (y: int)
@@ -80,31 +67,21 @@ method Abs(x: int) returns (y: int)
   ensures y >= 0
   ensures y == x || y == -x
 {
-  // TODO
+  y := 0; // TODO: replace with a correct implementation
 }
 
 
 /*
-  ############################################################
-  ### PART 2: PRECONDITIONS
-  ############################################################
-
-  `requires` is a precondition: a constraint on inputs that
-  the caller must satisfy. Dafny will reject any call site
+  A `requires` clause is a precondition, a constraint on inputs
+  that the caller must satisfy. Dafny will reject any call site
   that cannot prove the precondition holds.
-*/
 
-/*
-  NOTE: the postcondition `r * y == x` only holds when x is exactly
-  divisible by y (e.g. Divide(6, 2) = 3, and 3*2 = 6).
-  For non-divisible inputs, integer division truncates and the
-  equation breaks. The second precondition enforces exact divisibility.
+  Here, dividing by zero is undefined, so we require y != 0.
 */
 
 method Divide(x: int, y: int) returns (r: int)
   requires y != 0
-  requires x % y == 0
-  ensures r * y == x
+  ensures r == x / y
 {
   r := x / y;
 }
@@ -113,8 +90,8 @@ method Divide(x: int, y: int) returns (r: int)
 /*
   EXERCISE 2: Max
 
-  Implement Max. The two postconditions together say:
-    "m is at least as large as both inputs, and equals one of them."
+  Implement Max. The two postconditions together say that
+  m is at least as large as both inputs, and equals one of them.
 
   This fully pins down what max means.
 */
@@ -123,53 +100,48 @@ method Max(x: int, y: int) returns (m: int)
   ensures m >= x && m >= y
   ensures m == x || m == y
 {
-  // TODO
+  m := x; // TODO: replace with a correct implementation
 }
 
 
 /*
-  ############################################################
-  ### PART 3: WEAK VS STRONG SPECIFICATIONS
-  ############################################################
+
 */
 
 /*
-  This method verifies — but it is clearly wrong:
+  This method verifies, but it is clearly wrong:
 */
 
 method MaxWeak(x: int, y: int) returns (m: int)
   ensures m >= x && m >= y
 {
-  m := x + y + 1; // not a max — but Dafny accepts it!
+  m := x + y + 1; // not a max, but Dafny accepts it!
 }
 
 /*
   Why does Dafny accept this?
 
-  Because the specification is too weak. It only says m is an
-  upper bound, not that m equals one of the inputs. Any sufficiently
-  large value satisfies an upper-bound-only spec.
+  The specification is too weak. It only says m is an upper bound,
+  not that m equals one of the inputs. Any sufficiently large value
+  satisfies an upper-bound-only spec.
 
   EXERCISE 3: Strengthen the specification
 
   Add a second `ensures` clause to MaxWeakFixed so that the bogus
   implementation above is rejected, but a correct one is accepted.
 
-  (Change only the spec, not the body.)
+  Change only the spec, not the body.
 */
 
 method MaxWeakFixed(x: int, y: int) returns (m: int)
   ensures m >= x && m >= y
-  // TODO: add ensures clause here
+  ensures true // TODO: replace this with the missing ensures clause
 {
-  m := x + y + 1; // Dafny should now reject this body
+  m := x + y + 1; // Dafny should reject this once your spec is strong enough
 }
 
 
 /*
-  ############################################################
-  ### PART 4: WHAT IS CORRECTNESS?
-  ############################################################
 
   Specifications encode assumptions about the real world.
   Choosing what to specify is a design decision.
@@ -190,12 +162,12 @@ method MaxWeakFixed(x: int, y: int) returns (m: int)
     (c) Direction: should `amount` be required to be positive?
         What goes wrong if amount is negative or zero?
 
-  Start with (a) — it captures the most fundamental invariant.
+  Start with (a), which captures the most fundamental invariant.
 */
 
 method TransferSpec(a: int, b: int, amount: int) returns (a2: int, b2: int)
-  // TODO: requires ...
-  // TODO: ensures  ...
+  requires true // TODO: replace with real preconditions
+  ensures true  // TODO: replace with real postconditions
 {
   a2 := a - amount;
   b2 := b + amount;
@@ -203,17 +175,13 @@ method TransferSpec(a: int, b: int, amount: int) returns (a2: int, b2: int)
 
 
 /*
-  ############################################################
-  ### PART 5: PROOF PREVENTS RUNTIME ERRORS
-  ############################################################
-
   Dafny proves array accesses are in-bounds at verification time,
-  not at runtime. If it cannot prove safety, it refuses to compile.
+  before the program runs. If it cannot prove safety, it refuses
+  to compile.
 */
 
 method GetAt(arr: array<int>, i: int) returns (x: int)
   requires 0 <= i < arr.Length
-  reads arr
 {
   x := arr[i];
 }
@@ -223,39 +191,29 @@ method GetAt(arr: array<int>, i: int) returns (x: int)
 
   The method below omits the precondition. Observe the verification
   error Dafny reports on the array access.
-
-  Reflection question:
-    What is the difference between a Dafny verification error here
-    and a Java/Python ArrayIndexOutOfBoundsException at runtime?
-    Which would you rather have, and why?
 */
 
 method GetAtUnsafe(arr: array<int>, i: int) returns (x: int)
-  reads arr
 {
   x := arr[i]; // <-- Dafny should report: index out of range
 }
 
 
 /*
-  ############################################################
-  ### PART 6: LOOPS AND INVARIANTS
-  ############################################################
 
-  When Dafny verifies a loop, it does not "run" the loop.
-  Instead it asks: what property is preserved by each iteration?
+  When Dafny verifies a loop, it does not run the loop.
+  Instead it asks what property is preserved by each iteration.
 
   A loop invariant is a predicate that:
     (1) holds before the loop starts
     (2) is maintained by every iteration
-    (3) combined with the loop's exit condition, implies the postcondition
+    (3) combined with the loop exit condition, implies the postcondition
 
   This is the core concept of Hoare logic for loops.
-*/
 
-/*
-  The version below does NOT verify because Dafny has no
-  information about what `s` represents at each step.
+  The method below does not verify because Dafny has no information
+  about what `s` represents at each step. Your job is to add the
+  missing invariants to SumFixed.
 */
 
 method Sum(n: int) returns (s: int)
@@ -264,15 +222,12 @@ method Sum(n: int) returns (s: int)
 {
   s := 0;
   var i := 0;
-
   while i <= n
-    // No invariants — Dafny cannot verify the postcondition
   {
     s := s + i;
     i := i + 1;
   }
 }
-
 
 /*
   EXERCISE 6 (CORE): Add loop invariants to SumFixed
@@ -285,9 +240,9 @@ method Sum(n: int) returns (s: int)
         iteration i?
         Hint: after processing 0..i-1, what closed-form equals s?
 
-  Both invariants must hold before the loop (check: i=0, s=0),
+  Both invariants must hold before the loop (check with i=0, s=0),
   after each iteration, and together imply the postcondition
-  when the loop exits (i = n+1).
+  when the loop exits at i = n+1.
 */
 
 method SumFixed(n: int) returns (s: int)
@@ -296,10 +251,9 @@ method SumFixed(n: int) returns (s: int)
 {
   s := 0;
   var i := 0;
-
   while i <= n
-    invariant /* TODO: range invariant, e.g. 0 <= i <= ? */
-    invariant /* TODO: value invariant, e.g. s == ? */
+    invariant true // TODO: replace with range invariant, e.g. 0 <= i <= ?
+    invariant true // TODO: replace with value invariant, e.g. s == ?
   {
     s := s + i;
     i := i + 1;
@@ -308,93 +262,25 @@ method SumFixed(n: int) returns (s: int)
 
 
 /*
-  ############################################################
-  ### PART 7: AI AND LOOP INVARIANTS
-  ############################################################
-
-  AI coding assistants can suggest loop invariants — but they
-  can be subtly wrong. This exercise builds critical evaluation skills.
-
-  EXERCISE 7:
-
-  Step 1: Ask an AI tool (ChatGPT, Copilot, Claude, etc.) the
-  following prompt verbatim:
-
-    "What loop invariants are needed to verify this Dafny method?
-
-     method SumFixed(n: int) returns (s: int)
-       requires n >= 0
-       ensures s == n * (n + 1) / 2
-     {
-       s := 0;
-       var i := 0;
-       while i <= n {
-         s := s + i;
-         i := i + 1;
-       }
-     }"
-
-  Step 2: Paste the AI's suggested invariants into SumAI below
-  and check whether Dafny accepts them.
-
-  Step 3: Record your findings in the comment block at the bottom:
-    - Did the invariants verify immediately, or did you need to fix them?
-    - Were they the same as your answer to Exercise 6?
-    - If Dafny rejected them, what error was reported?
-    - Did the AI explain *why* each invariant is needed?
-*/
-
-method SumAI(n: int) returns (s: int)
-  requires n >= 0
-  ensures s == n * (n + 1) / 2
-{
-  s := 0;
-  var i := 0;
-
-  while i <= n
-    invariant /* AI suggestion 1 */
-    invariant /* AI suggestion 2 */
-  {
-    s := s + i;
-    i := i + 1;
-  }
-}
-
-/*
-  AI observations:
-  - Tool used:
-  - Invariants suggested:
-  - Verified without changes? (yes / no / partially)
-  - Notes:
-*/
-
-
-/*
-  ############################################################
-  ### PART 8: STRONGER EXAMPLE — ARRAY MAX
-  ############################################################
 
   This method finds the maximum element of a non-empty array.
-  The postcondition uses a universal quantifier:
-    "for all valid indices i, m is at least arr[i]"
+  The postcondition uses a universal quantifier, saying that
+  for all valid indices i, m is at least arr[i].
 
-  `reads arr` is required whenever specs or the body access
+  `reads arr` is required whenever the spec or body accesses
   array elements.
 
-  The version below does NOT verify — Dafny cannot establish
+  The version below does not verify. Dafny cannot establish
   the postcondition without knowing what m represents mid-loop.
 */
 
 method MaxArray(arr: array<int>) returns (m: int)
   requires arr.Length > 0
-  reads arr
   ensures forall i :: 0 <= i < arr.Length ==> m >= arr[i]
 {
   m := arr[0];
   var i := 1;
-
   while i < arr.Length
-    // No invariants — Dafny cannot verify the postcondition
   {
     if arr[i] > m {
       m := arr[i];
@@ -403,9 +289,7 @@ method MaxArray(arr: array<int>) returns (m: int)
   }
 }
 
-
 /*
-  EXERCISE 8: Add loop invariants to MaxArrayFixed
 
   You need two invariants:
     (a) A range invariant: what are the valid values of i?
@@ -415,21 +299,19 @@ method MaxArray(arr: array<int>) returns (m: int)
         Hint: m is the max of arr[0..i). Express this with a
         forall quantifier over the indices already visited.
 
-  When the loop exits, i == arr.Length, so the maximality
-  invariant covers the whole array — exactly the postcondition.
+  When the loop exits at i == arr.Length, the maximality invariant
+  covers the whole array, which is exactly the postcondition.
 */
 
 method MaxArrayFixed(arr: array<int>) returns (m: int)
   requires arr.Length > 0
-  reads arr
   ensures forall i :: 0 <= i < arr.Length ==> m >= arr[i]
 {
   m := arr[0];
   var i := 1;
-
   while i < arr.Length
-    invariant /* TODO: range invariant */
-    invariant /* TODO: maximality invariant over arr[0..i) */
+    invariant true // TODO: replace with range invariant
+    invariant true // TODO: replace with maximality invariant over arr[0..i)
   {
     if arr[i] > m {
       m := arr[i];
@@ -437,25 +319,3 @@ method MaxArrayFixed(arr: array<int>) returns (m: int)
     i := i + 1;
   }
 }
-
-
-/*
-  ############################################################
-  ### SUMMARY
-  ############################################################
-
-  You have seen:
-
-  1. Postconditions (ensures): properties the method guarantees
-  2. Preconditions (requires): constraints callers must satisfy
-  3. Weak vs. strong specifications: a weak spec admits wrong code
-  4. Correctness is relative to a spec: choose specs carefully
-  5. Verification vs. runtime errors: caught before execution
-  6. Loop invariants: what stays true across every iteration
-  7. AI suggestions need verification: always check in Dafny
-  8. Quantified postconditions: reasoning about entire arrays
-
-  The central lesson:
-    Dafny does not make programs correct — it checks them against
-    your specification. Writing good specifications is the hard part.
-*/
