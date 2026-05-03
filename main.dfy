@@ -3,18 +3,18 @@
   ### SETUP & INSTALLATION
   ############################################################
 
-  This lab runs in GitHub Codespaces — no local install needed.
+  This lab runs in GitHub Codespaces, no local install needed.
 
   1. Open the repository link provided by your instructor.
   2. Click the green "Code" button, then "Codespaces", then "Create codespace".
   3. Wait for the environment to load (this may take a minute).
   4. Open this file in the editor.
-  5. To verify, open a terminal (Ctrl+`) and run:
+  5. Open a terminal (Ctrl+`) and run:
 
        dafny verify Lab1_Basics.dfy
 
-  The Dafny extension will also show inline red squiggles for
-  verification errors as you type, but may take a moment to start.
+  The Dafny extension will also show inline red squiggles as you
+  type, but may take a moment to start.
 */
 
 
@@ -24,23 +24,21 @@
   ############################################################
 
   Dafny is a programming language with built-in verification.
+  Programs are written alongside specifications, and Dafny checks
+  that the code satisfies the specification for every possible input.
 
-  In Dafny, you write code and specifications together.
-  The code says what the program does.
-  The specification says what must be true.
+  This is different from testing, which only checks the inputs you
+  thought to try. A program can pass all its tests and still be wrong
+  if the specification is too weak, or if the specification itself
+  does not capture what you intended.
 
-  Dafny checks that the code satisfies the specification
-  for ALL inputs, not just the ones you test.
-
-  A program can be correct with respect to its specification
-  and still be wrong if the specification is too weak.
-  Getting both right is your job.
+  Getting both the code and the specification right is your job.
 */
 
 
 /*
-  An `ensures` clause is a postcondition, a property that must
-  hold when the method returns.
+  An `ensures` clause is a postcondition: a property Dafny will
+  check holds whenever the method returns.
 */
 
 method Double(x: int) returns (y: int)
@@ -50,8 +48,8 @@ method Double(x: int) returns (y: int)
 }
 
 /*
-  Try breaking the implementation: change `x + x` to `x + 1`.
-  Dafny should reject it with a verification error.
+  Try breaking the implementation by changing `x + x` to `x + 1`.
+  Dafny should reject it.
 */
 
 
@@ -59,7 +57,6 @@ method Double(x: int) returns (y: int)
   EXERCISE 1: Absolute value
 
   Implement Abs so that both postconditions are satisfied.
-
   Hint: use an if/else on x.
 */
 
@@ -72,11 +69,11 @@ method Abs(x: int) returns (y: int)
 
 
 /*
-  A `requires` clause is a precondition, a constraint on inputs
-  that the caller must satisfy. Dafny will reject any call site
-  that cannot prove the precondition holds.
+  A `requires` clause is a precondition: a constraint on the inputs
+  that any caller must satisfy. Dafny will reject call sites that
+  cannot prove the precondition holds.
 
-  Here, dividing by zero is undefined, so we require y != 0.
+  Division by zero is undefined, so the method below requires y != 0.
 */
 
 method Divide(x: int, y: int) returns (r: int)
@@ -90,10 +87,9 @@ method Divide(x: int, y: int) returns (r: int)
 /*
   EXERCISE 2: Max
 
-  Implement Max. The two postconditions together say that
-  m is at least as large as both inputs, and equals one of them.
-
-  This fully pins down what max means.
+  Implement Max. The two postconditions together express that m is at
+  least as large as both inputs and equals one of them, which fully
+  pins down what max means.
 */
 
 method Max(x: int, y: int) returns (m: int)
@@ -105,11 +101,11 @@ method Max(x: int, y: int) returns (m: int)
 
 
 /*
+  ############################################################
+  ### WEAK VS STRONG SPECIFICATIONS
+  ############################################################
 
-*/
-
-/*
-  This method verifies, but it is clearly wrong:
+  The method below verifies, but is clearly wrong:
 */
 
 method MaxWeak(x: int, y: int) returns (m: int)
@@ -119,40 +115,37 @@ method MaxWeak(x: int, y: int) returns (m: int)
 }
 
 /*
-  Why does Dafny accept this?
-
-  The specification is too weak. It only says m is an upper bound,
-  not that m equals one of the inputs. Any sufficiently large value
-  satisfies an upper-bound-only spec.
+  Dafny accepts this because the specification is too weak. Saying
+  that m is an upper bound on x and y is not enough to pin down max,
+  since any sufficiently large value will do.
 
   EXERCISE 3: Strengthen the specification
 
   Add a second `ensures` clause to MaxWeakFixed so that the bogus
-  implementation above is rejected, but a correct one is accepted.
-
-  Change only the spec, not the body.
+  implementation above is rejected. Change only the spec, not the body.
 */
 
 method MaxWeakFixed(x: int, y: int) returns (m: int)
   ensures m >= x && m >= y
-  ensures true // TODO: replace this with the missing ensures clause
+  // TODO: add a second ensures clause here
 {
   m := x + y + 1; // Dafny should reject this once your spec is strong enough
 }
 
 
 /*
+  ############################################################
+  ### WHAT IS CORRECTNESS?
+  ############################################################
 
-  Specifications encode assumptions about the real world.
-  Choosing what to specify is a design decision.
-*/
+  Specifications encode assumptions about the real world, and
+  choosing what to specify is a design decision.
 
-/*
   EXERCISE 4: Specify the bank transfer
 
   Add `requires` and `ensures` clauses to TransferSpec below.
-
   Think through each of these:
+
     (a) Conservation: should total money be preserved?
         Hint: what should (a2 + b2) equal?
 
@@ -162,7 +155,7 @@ method MaxWeakFixed(x: int, y: int) returns (m: int)
     (c) Direction: should `amount` be required to be positive?
         What goes wrong if amount is negative or zero?
 
-  Start with (a), which captures the most fundamental invariant.
+  Start with (a), which captures the most fundamental property.
 */
 
 method TransferSpec(a: int, b: int, amount: int) returns (a2: int, b2: int)
@@ -175,9 +168,12 @@ method TransferSpec(a: int, b: int, amount: int) returns (a2: int, b2: int)
 
 
 /*
-  Dafny proves array accesses are in-bounds at verification time,
-  before the program runs. If it cannot prove safety, it refuses
-  to compile.
+  ############################################################
+  ### PROOF PREVENTS RUNTIME ERRORS
+  ############################################################
+
+  Array accesses in Dafny are checked at verification time. If Dafny
+  cannot prove an access is in bounds, it will not compile the program.
 */
 
 method GetAt(arr: array<int>, i: int) returns (x: int)
@@ -189,8 +185,9 @@ method GetAt(arr: array<int>, i: int) returns (x: int)
 /*
   EXERCISE 5: Unsafe access
 
-  The method below omits the precondition. Observe the verification
-  error Dafny reports on the array access.
+  The method below omits the precondition. Observe the error Dafny
+  reports on the array access, and compare it to what would happen
+  at runtime in Java or Python. Which would you rather have, and why?
 */
 
 method GetAtUnsafe(arr: array<int>, i: int) returns (x: int)
@@ -200,20 +197,18 @@ method GetAtUnsafe(arr: array<int>, i: int) returns (x: int)
 
 
 /*
+  ############################################################
+  ### LOOPS AND INVARIANTS
+  ############################################################
 
-  When Dafny verifies a loop, it does not run the loop.
-  Instead it asks what property is preserved by each iteration.
-
-  A loop invariant is a predicate that:
-    (1) holds before the loop starts
-    (2) is maintained by every iteration
-    (3) combined with the loop exit condition, implies the postcondition
-
-  This is the core concept of Hoare logic for loops.
+  Dafny does not verify loops by running them. Instead, it asks
+  for a loop invariant: a property that holds before the loop begins,
+  is preserved by every iteration, and together with the exit condition
+  implies the postcondition. This is the core idea behind Hoare logic.
 
   The method below does not verify because Dafny has no information
-  about what `s` represents at each step. Your job is to add the
-  missing invariants to SumFixed.
+  about what `s` represents at each step. SumFixed is your version
+  to complete.
 */
 
 method Sum(n: int) returns (s: int)
@@ -240,9 +235,9 @@ method Sum(n: int) returns (s: int)
         iteration i?
         Hint: after processing 0..i-1, what closed-form equals s?
 
-  Both invariants must hold before the loop (check with i=0, s=0),
-  after each iteration, and together imply the postcondition
-  when the loop exits at i = n+1.
+  Both must hold before the loop (check with i=0, s=0), be preserved
+  by each iteration, and together imply the postcondition when the
+  loop exits at i = n+1.
 */
 
 method SumFixed(n: int) returns (s: int)
@@ -262,16 +257,16 @@ method SumFixed(n: int) returns (s: int)
 
 
 /*
+  ############################################################
+  ### ARRAY MAX
+  ############################################################
 
-  This method finds the maximum element of a non-empty array.
-  The postcondition uses a universal quantifier, saying that
-  for all valid indices i, m is at least arr[i].
+  Finding the maximum of an array requires reasoning about all
+  elements at once. The postcondition below uses a universal
+  quantifier to express this: for every valid index i, m >= arr[i].
 
-  `reads arr` is required whenever the spec or body accesses
-  array elements.
-
-  The version below does not verify. Dafny cannot establish
-  the postcondition without knowing what m represents mid-loop.
+  Without invariants, Dafny cannot establish this postcondition
+  because it has no account of what m represents mid-loop.
 */
 
 method MaxArray(arr: array<int>) returns (m: int)
@@ -290,6 +285,7 @@ method MaxArray(arr: array<int>) returns (m: int)
 }
 
 /*
+  EXERCISE 7: Add loop invariants to MaxArrayFixed
 
   You need two invariants:
     (a) A range invariant: what are the valid values of i?
