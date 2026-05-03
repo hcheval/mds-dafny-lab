@@ -10,7 +10,7 @@
   4. Open this file in the editor.
   5. Open a terminal (Ctrl+`) and run:
 
-       dafny verify Lab1_Basics.dfy
+       dafny verify main.dfy
 
   The Dafny extension will also show inline red squiggles as you
   type, but may take a moment to start.
